@@ -103,6 +103,12 @@ jobs:
             throw "Inno Setup failed with exit code $LASTEXITCODE."
           }
 
+      - name: Package Windows ZIP
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path stage/plugins -DestinationPath "release/obs-auto-crop-${{ github.ref_name }}-windows-x64.zip"
+
       - name: Build macOS installer
         if: matrix.platform == 'macos'
         shell: bash
@@ -124,6 +130,11 @@ jobs:
           installer -pkg "release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.pkg" -target CurrentUserHomeDirectory
           test -f "$HOME/Library/Application Support/obs-studio/plugins/obs-auto-crop.plugin/Contents/MacOS/obs-auto-crop"
           test -f "$HOME/Library/Application Support/obs-studio/plugins/obs-auto-crop.plugin/Contents/Resources/locale/ko-KR.ini"
+
+      - name: Package macOS ZIP
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: ditto -c -k --keepParent stage/obs-auto-crop.plugin "release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.zip"
 
       - name: Build Ubuntu installer
         if: matrix.platform == 'linux'
@@ -149,6 +160,11 @@ jobs:
           dpkg-deb --extract "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-amd64.deb" build/deb-verify
           test -f build/deb-verify/usr/lib/x86_64-linux-gnu/obs-plugins/obs-auto-crop.so
           test -f build/deb-verify/usr/share/obs/obs-plugins/obs-auto-crop/locale/ko-KR.ini
+
+      - name: Package Ubuntu tarball
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: tar -C stage -czf "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-x86_64.tar.gz" lib share
 
       - uses: actions/upload-artifact@v4
         with:
