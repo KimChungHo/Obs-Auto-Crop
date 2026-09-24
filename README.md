@@ -2,26 +2,7 @@
 
 OBS 소스의 **변환 → 자동 크롭**을 선택하면 현재 프레임의 검은 가장자리를 찾아 해당 장면 항목의 크롭 값에 적용합니다. 한 번 실행하는 명령이며, OBS의 실행 취소로 되돌릴 수 있습니다.
 
-## 빌드
-
-Windows에서는 Visual Studio 2022, CMake 3.28 이상, OBS 개발 패키지(`libobs`, `obs-frontend-api`)와 OBS가 사용하는 Qt 6 개발 패키지가 필요합니다. 이 PC에 설치된 OBS는 32.2.2이므로 개발 패키지도 32.2.2와 x64 아키텍처에 맞추세요. [OBS 공식 플러그인 템플릿](https://github.com/obsproject/obs-plugintemplate)의 빌드 환경 안내를 참고할 수 있습니다.
-
-```powershell
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/path/to/obs-sdk;C:/path/to/Qt/6.x/msvc2022_64"
-cmake --build build --config RelWithDebInfo
-```
-
-생성된 `obs-auto-crop.dll`은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/bin/64bit/`에, `data/locale/`의 모든 언어 파일은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/data/locale/`에 넣습니다. CMake 설치를 사용한다면 `cmake --install build --config RelWithDebInfo --prefix "C:/ProgramData/obs-studio"`로 같은 구조를 만들 수 있습니다. OBS를 다시 시작하면 메뉴에 표시됩니다.
-
 플러그인은 OBS 32.2.2의 77개 언어 코드에 맞춰 **자동 크롭** 메뉴 이름과 실행 취소 이름을 표시합니다. 오류 및 안내 문구는 한국어와 영어가 제공되며, 다른 언어에서는 영어로 표시됩니다.
-
-검은 여백 감지 로직은 OBS 없이 따로 테스트할 수 있습니다.
-
-```powershell
-cmake -S tests -B build/tests -G "Visual Studio 17 2022" -A x64
-cmake --build build/tests --config Release
-ctest --test-dir build/tests -C Release --output-on-failure
-```
 
 ## 자동 릴리즈
 
