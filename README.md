@@ -11,7 +11,9 @@ cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/pa
 cmake --build build --config RelWithDebInfo
 ```
 
-생성된 `obs-auto-crop.dll`은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/bin/64bit/`에, `data/locale/ko-KR.ini`는 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/data/locale/`에 넣습니다. CMake 설치를 사용한다면 `cmake --install build --config RelWithDebInfo --prefix "C:/ProgramData/obs-studio"`로 같은 구조를 만들 수 있습니다. OBS를 다시 시작하면 메뉴에 표시됩니다.
+생성된 `obs-auto-crop.dll`은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/bin/64bit/`에, `data/locale/`의 모든 언어 파일은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/data/locale/`에 넣습니다. CMake 설치를 사용한다면 `cmake --install build --config RelWithDebInfo --prefix "C:/ProgramData/obs-studio"`로 같은 구조를 만들 수 있습니다. OBS를 다시 시작하면 메뉴에 표시됩니다.
+
+플러그인은 OBS 32.2.2의 77개 언어 코드에 맞춰 **자동 크롭** 메뉴 이름과 실행 취소 이름을 표시합니다. 오류 및 안내 문구는 한국어와 영어가 제공되며, 다른 언어에서는 영어로 표시됩니다.
 
 검은 여백 감지 로직은 OBS 없이 따로 테스트할 수 있습니다.
 

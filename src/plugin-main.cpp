@@ -20,7 +20,7 @@
 #include <vector>
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("obs-auto-crop", "ko-KR")
+OBS_MODULE_USE_DEFAULT_LOCALE("obs-auto-crop", "en-US")
 
 namespace {
 
@@ -162,6 +162,7 @@ private:
 	{
 		if (!action)
 			return;
+		action->setText(QString::fromUtf8(obs_module_text("AutoCrop")));
 		obs_source_t *scene_source = get_edit_scene();
 		Selection selection;
 		if (scene_source) {
@@ -288,8 +289,8 @@ private:
 			return;
 		CaptureJob *capture = job;
 		if (!capture->success) {
-			QMessageBox::warning(main_window, QString::fromUtf8("자동 크롭"),
-					     QString::fromUtf8("소스 화면을 읽지 못했습니다."));
+			QMessageBox::warning(main_window, QString::fromUtf8(obs_module_text("AutoCrop")),
+					     QString::fromUtf8(obs_module_text("CaptureFailed")));
 			release_job();
 			return;
 		}
@@ -297,8 +298,8 @@ private:
 		const BlackBorderCrop edges = detect_black_borders(capture->pixels.data(), capture->width,
 									 capture->height, capture->width * 4);
 		if (!edges.valid) {
-			QMessageBox::information(main_window, QString::fromUtf8("자동 크롭"),
-						 QString::fromUtf8("자르기 가능한 검은 여백을 찾지 못했습니다."));
+			QMessageBox::information(main_window, QString::fromUtf8(obs_module_text("AutoCrop")),
+						 QString::fromUtf8(obs_module_text("NoBordersFound")));
 			release_job();
 			return;
 		}
@@ -322,7 +323,7 @@ private:
 				const std::string redo = after ? obs_data_get_json(after) : "";
 				obs_data_release(after);
 				if (!undo.empty() && !redo.empty() && undo != redo)
-					obs_frontend_add_undo_redo_action("자동 크롭", obs_scene_load_transform_states,
+					obs_frontend_add_undo_redo_action(obs_module_text("AutoCrop"), obs_scene_load_transform_states,
 									  obs_scene_load_transform_states, undo.c_str(), redo.c_str(),
 									  false);
 			}
