@@ -18,7 +18,6 @@ if(PLATFORM STREQUAL "windows")
   set(qt_archive "windows-deps-qt6-${deps_version}-x64.zip")
   set(qt_hash "7c7f985711d80467bdc1795b6592275a27d5b0e5a2c7a61db1f2c1d08d6a5579")
   set(generator "Visual Studio 17 2022")
-  set(platform_args -A x64)
 elseif(PLATFORM STREQUAL "macos")
   set(arch "universal")
   set(deps_archive "macos-deps-${deps_version}-universal.tar.xz")
@@ -26,8 +25,6 @@ elseif(PLATFORM STREQUAL "macos")
   set(qt_archive "macos-deps-qt6-${deps_version}-universal.tar.xz")
   set(qt_hash "d4b8058612a7067e44b2205fe7925ee24e9ec6b15ac8c29d3e6230c70030b102")
   set(generator "Xcode")
-  set(platform_args "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" "-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0"
-    "-DCMAKE_FRAMEWORK_PATH=${SDK_ROOT}/Frameworks")
 else()
   message(FATAL_ERROR "Unsupported PLATFORM: ${PLATFORM}")
 endif()
@@ -73,10 +70,19 @@ endif()
 
 set(prefixes "${deps_dir};${qt_dir};${SDK_ROOT}")
 set(obs_build "${SDK_ROOT}/obs-build-${arch}")
-execute_process(COMMAND "${CMAKE_COMMAND}" -S "${obs_source}" -B "${obs_build}" -G "${generator}"
-  ${platform_args} "-DCMAKE_PREFIX_PATH=${prefixes}" "-DOBS_CMAKE_VERSION=3.0.0"
-  "-DOBS_VERSION_OVERRIDE=${obs_version}" "-DENABLE_PLUGINS=OFF" "-DENABLE_FRONTEND=OFF"
-  COMMAND_ERROR_IS_FATAL ANY)
+if(PLATFORM STREQUAL "macos")
+  # Keep the semicolon inside one argument: unquoted list expansion builds arm64 only.
+  execute_process(COMMAND "${CMAKE_COMMAND}" -S "${obs_source}" -B "${obs_build}" -G "${generator}"
+    "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" "-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0"
+    "-DCMAKE_FRAMEWORK_PATH=${SDK_ROOT}/Frameworks" "-DCMAKE_PREFIX_PATH=${prefixes}"
+    "-DOBS_CMAKE_VERSION=3.0.0" "-DOBS_VERSION_OVERRIDE=${obs_version}"
+    "-DENABLE_PLUGINS=OFF" "-DENABLE_FRONTEND=OFF" COMMAND_ERROR_IS_FATAL ANY)
+else()
+  execute_process(COMMAND "${CMAKE_COMMAND}" -S "${obs_source}" -B "${obs_build}" -G "${generator}"
+    -A x64 "-DCMAKE_PREFIX_PATH=${prefixes}" "-DOBS_CMAKE_VERSION=3.0.0"
+    "-DOBS_VERSION_OVERRIDE=${obs_version}" "-DENABLE_PLUGINS=OFF" "-DENABLE_FRONTEND=OFF"
+    COMMAND_ERROR_IS_FATAL ANY)
+endif()
 execute_process(COMMAND "${CMAKE_COMMAND}" --build "${obs_build}" --target obs-frontend-api
   --config Release COMMAND_ERROR_IS_FATAL ANY)
 execute_process(COMMAND "${CMAKE_COMMAND}" --install "${obs_build}" --component Development
