@@ -25,7 +25,7 @@ ctest --test-dir build/tests -C Release --output-on-failure
 
 ## 자동 릴리즈
 
-`.github/workflows/release.yml`은 `v1.0.0`처럼 `v`로 시작하는 세 자리 버전 태그를 푸시하면 Windows x64, macOS universal(Apple Silicon 및 Intel), Ubuntu 26.04 x86_64용 플러그인을 각각 빌드합니다. 세 빌드와 테스트가 모두 성공하면 GitHub Release를 만들고 압축 파일 3개를 첨부합니다. macOS 파일은 서명하거나 공증하지 않은 플러그인입니다.
+`.github/workflows/release.yml`은 `v1.0.0`처럼 `v`로 시작하는 세 자리 버전 태그를 푸시하면 Windows x64, macOS universal(Apple Silicon 및 Intel), Ubuntu 26.04 x86_64용 플러그인을 각각 빌드합니다. 세 빌드와 테스트가 모두 성공하면 GitHub Release를 만들고 Windows 설치 파일(`.exe`), macOS 압축 파일(`.zip`), Ubuntu 압축 파일(`.tar.gz`)을 첨부합니다. macOS 파일은 서명하거나 공증하지 않은 플러그인입니다.
 
 ```bash
 git tag v1.0.0
@@ -38,9 +38,11 @@ git push origin v1.0.0
 
 | OS | 설치 방법 |
 | --- | --- |
-| Windows | 압축 파일을 `C:/ProgramData/obs-studio/`에 풀어 `plugins/obs-auto-crop` 폴더가 만들어지도록 합니다. |
+| Windows | `obs-auto-crop-버전-windows-x64-setup.exe`를 실행하고 설치 마법사에서 OBS Studio 설치 폴더를 선택합니다. 기본 경로는 `C:/Program Files/obs-studio`이며, 다른 경로에 OBS를 설치했다면 `bin/64bit/obs64.exe`가 들어 있는 OBS 최상위 폴더를 지정합니다. 설치 후 OBS를 다시 시작합니다. |
 | macOS | `obs-auto-crop.plugin`을 `~/Library/Application Support/obs-studio/plugins/`에 복사합니다. |
 | Ubuntu 26.04 | 압축 파일의 `lib/`와 `share/` 내용을 `/usr/` 아래에 설치합니다. 예: `sudo tar -C /usr -xzf obs-auto-crop-v1.0.0-ubuntu-26.04-x86_64.tar.gz`. |
+
+이전 Windows ZIP을 수동으로 설치했다면 설치 파일을 실행하기 전에 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/`의 기존 복사본을 삭제하세요. 새 설치 파일은 선택한 OBS 설치 폴더 안에 플러그인을 설치하며, 제거할 때도 그 파일만 삭제합니다.
 
 Windows와 macOS는 OBS 32.2.2 개발 SDK로, Ubuntu는 배포판의 `libobs-dev` 패키지로 빌드합니다. Linux 바이너리는 다른 배포판의 OBS 및 Qt 버전과 호환되지 않을 수 있습니다.
 

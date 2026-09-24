@@ -86,12 +86,22 @@ jobs:
           cmake --install build/plugin --config Release --prefix "$GITHUB_WORKSPACE/stage"
         shell: bash
 
-      - name: Package Windows
+      - name: Build Windows installer
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path release -Force | Out-Null
-          Compress-Archive -Path stage/plugins -DestinationPath "release/obs-auto-crop-${{ github.ref_name }}-windows-x64.zip"
+          $compiler = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
+          if (-not $compiler) {
+            $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          if (-not (Test-Path -LiteralPath $compiler)) {
+            throw 'Inno Setup compiler (ISCC.exe) was not found on the Windows runner.'
+          }
+          & $compiler "/DMyAppVersion=${{ github.ref_name }}" installer/obs-auto-crop.iss
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup failed with exit code $LASTEXITCODE."
+          }
 
       - name: Package macOS
         if: matrix.platform == 'macos'
