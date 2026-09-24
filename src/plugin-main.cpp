@@ -150,10 +150,12 @@ private:
 		for (int i = 0; i < actions.size(); ++i) {
 			if (actions[i]->objectName() == "actionResetTransform") {
 				menu->insertAction(i + 1 < actions.size() ? actions[i + 1] : nullptr, action);
+				blog(LOG_INFO, "OBS Auto Crop added to Transform menu");
 				return;
 			}
 		}
 		menu->addAction(action);
+		blog(LOG_INFO, "OBS Auto Crop added to Transform menu");
 	}
 
 	void update_enabled()

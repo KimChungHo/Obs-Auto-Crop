@@ -11,7 +11,7 @@ cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/pa
 cmake --build build --config RelWithDebInfo
 ```
 
-생성된 `obs-auto-crop.dll`은 OBS 설치 폴더의 `obs-plugins/64bit/`에, `data/locale/ko-KR.ini`는 `data/obs-plugins/obs-auto-crop/locale/`에 넣습니다. OBS를 다시 시작하면 메뉴에 표시됩니다.
+생성된 `obs-auto-crop.dll`은 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/bin/64bit/`에, `data/locale/ko-KR.ini`는 `C:/ProgramData/obs-studio/plugins/obs-auto-crop/data/locale/`에 넣습니다. CMake 설치를 사용한다면 `cmake --install build --config RelWithDebInfo --prefix "C:/ProgramData/obs-studio"`로 같은 구조를 만들 수 있습니다. OBS를 다시 시작하면 메뉴에 표시됩니다.
 
 검은 여백 감지 로직은 OBS 없이 따로 테스트할 수 있습니다.
 
