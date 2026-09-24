@@ -21,13 +21,22 @@ jobs:
             runner: windows-2022
             platform: windows
           - name: macOS universal
-            runner: macos-15
+            runner: macos-26
             platform: macos
           - name: Ubuntu 26.04 x86_64
             runner: ubuntu-26.04
             platform: linux
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode 26.5
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          export DEVELOPER_DIR=/Applications/Xcode_26.5.app/Contents/Developer
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
 
       - name: Test border detection
         run: |
