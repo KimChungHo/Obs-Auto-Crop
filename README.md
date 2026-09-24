@@ -6,6 +6,10 @@ Choose **Transform → Auto Crop** for an OBS source to detect black borders in 
 
 The plugin provides localized menu and Undo labels for the 77 language codes supported by OBS 32.2.2. Error and guidance messages are available in Korean and English; other languages fall back to English.
 
+## Usage
+
+![Auto Crop usage](img/auto-crop.gif)
+
 ## Automated releases
 
 Pushing a three-part version tag beginning with `v`, such as `v1.0.0`, triggers `.github/workflows/release.yml` to build the plugin for Windows x64, macOS universal (Apple Silicon and Intel), and Ubuntu 26.04 x86_64. If all three builds and their tests pass, the workflow creates a GitHub Release with an installer (`.exe`, `.pkg`, or `.deb`) and a manual-install archive (`.zip`, `.zip`, or `.tar.gz`) for each OS. The macOS package and plugin are neither signed nor notarized.
