@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            runner: windows-2022
+            platform: windows
+          - name: macOS universal
+            runner: macos-15
+            platform: macos
+          - name: Ubuntu 26.04 x86_64
+            runner: ubuntu-26.04
+            platform: linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test border detection
+        run: |
+          cmake -S tests -B build/tests -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/tests --config Release
+          ctest --test-dir build/tests -C Release --output-on-failure
+
+      - name: Prepare OBS SDK
+        if: matrix.platform == 'windows' || matrix.platform == 'macos'
+        shell: bash
+        run: cmake -DSDK_ROOT="$GITHUB_WORKSPACE/.deps" -DPLATFORM=${{ matrix.platform }} -P cmake/prepare-obs-sdk.cmake
+
+      - name: Install Ubuntu development packages
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libobs-dev qt6-base-dev ninja-build
+
+      - name: Configure Windows plugin
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $prefix = @(
+            "$env:GITHUB_WORKSPACE/.deps/obs-deps-2026-07-15-x64"
+            "$env:GITHUB_WORKSPACE/.deps/obs-deps-qt6-2026-07-15-x64"
+            "$env:GITHUB_WORKSPACE/.deps"
+          ) -join ';'
+          cmake -S . -B build/plugin -G 'Visual Studio 17 2022' -A x64 "-DCMAKE_PREFIX_PATH=$prefix"
+
+      - name: Configure macOS plugin
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cmake -S . -B build/plugin -G Xcode \
+            -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+            "-DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/.deps/obs-deps-2026-07-15-universal;$GITHUB_WORKSPACE/.deps/obs-deps-qt6-2026-07-15-universal;$GITHUB_WORKSPACE/.deps" \
+            "-DCMAKE_FRAMEWORK_PATH=$GITHUB_WORKSPACE/.deps/Frameworks"
+
+      - name: Configure Linux plugin
+        if: matrix.platform == 'linux'
+        run: cmake -S . -B build/plugin -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu
+
+      - name: Build and install plugin
+        run: |
+          cmake --build build/plugin --config Release
+          cmake --install build/plugin --config Release --prefix "$GITHUB_WORKSPACE/stage"
+        shell: bash
+
+      - name: Package Windows
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Compress-Archive -Path stage/plugins -DestinationPath "release/obs-auto-crop-${{ github.ref_name }}-windows-x64.zip"
+
+      - name: Package macOS
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          mkdir -p release
+          ditto -c -k --keepParent stage/obs-auto-crop.plugin "release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.zip"
+
+      - name: Package Linux
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          mkdir -p release
+          tar -C stage -czf "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-x86_64.tar.gz" lib share
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: obs-auto-crop-${{ matrix.platform }}
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: obs-auto-crop-*
+          path: release
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes

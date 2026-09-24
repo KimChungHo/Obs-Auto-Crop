@@ -23,6 +23,27 @@ cmake --build build/tests --config Release
 ctest --test-dir build/tests -C Release --output-on-failure
 ```
 
+## 자동 릴리즈
+
+`.github/workflows/release.yml`은 `v1.0.0`처럼 `v`로 시작하는 세 자리 버전 태그를 푸시하면 Windows x64, macOS universal(Apple Silicon 및 Intel), Ubuntu 26.04 x86_64용 플러그인을 각각 빌드합니다. 세 빌드와 테스트가 모두 성공하면 GitHub Release를 만들고 압축 파일 3개를 첨부합니다. macOS 파일은 서명하거나 공증하지 않은 플러그인입니다.
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+태그를 만들기 전에 워크플로 파일이 기본 브랜치에 푸시되어 있어야 합니다. GitHub 저장소의 Actions 권한에서 `GITHUB_TOKEN`에 Release 생성 권한(`contents: write`)이 허용되어야 합니다. Actions 화면에서 수동으로 빌드 검증을 실행할 수도 있으며, 수동 실행은 Release를 만들지 않습니다.
+
+다운로드한 파일의 설치 위치는 다음과 같습니다.
+
+| OS | 설치 방법 |
+| --- | --- |
+| Windows | 압축 파일을 `C:/ProgramData/obs-studio/`에 풀어 `plugins/obs-auto-crop` 폴더가 만들어지도록 합니다. |
+| macOS | `obs-auto-crop.plugin`을 `~/Library/Application Support/obs-studio/plugins/`에 복사합니다. |
+| Ubuntu 26.04 | 압축 파일의 `lib/`와 `share/` 내용을 `/usr/` 아래에 설치합니다. 예: `sudo tar -C /usr -xzf obs-auto-crop-v1.0.0-ubuntu-26.04-x86_64.tar.gz`. |
+
+Windows와 macOS는 OBS 32.2.2 개발 SDK로, Ubuntu는 배포판의 `libobs-dev` 패키지로 빌드합니다. Linux 바이너리는 다른 배포판의 OBS 및 Qt 버전과 호환되지 않을 수 있습니다.
+
 ## 동작 범위
 
 - 비디오 소스 한 개를 선택했을 때 사용할 수 있습니다. 잠긴 항목과 그룹은 제외합니다.
