@@ -103,19 +103,52 @@ jobs:
             throw "Inno Setup failed with exit code $LASTEXITCODE."
           }
 
-      - name: Package macOS
+      - name: Build macOS installer
         if: matrix.platform == 'macos'
         shell: bash
         run: |
           mkdir -p release
-          ditto -c -k --keepParent stage/obs-auto-crop.plugin "release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.zip"
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            version="$(sed -n 's/^project(obs-auto-crop VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)"
+          fi
+          mkdir -p "build/macos-pkg/root/Library/Application Support/obs-studio/plugins"
+          ditto stage/obs-auto-crop.plugin "build/macos-pkg/root/Library/Application Support/obs-studio/plugins/obs-auto-crop.plugin"
+          (
+            cd build/macos-pkg
+            pkgbuild --root root --install-location / --identifier com.obsautocrop.plugin --version "$version" component.pkg
+            productbuild --synthesize --package component.pkg distribution.xml
+            python3 ../../installer/set-macos-home-domain.py distribution.xml
+            productbuild --distribution distribution.xml --package-path . "../../release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.pkg"
+          )
+          installer -pkg "release/obs-auto-crop-${GITHUB_REF_NAME}-macos-universal.pkg" -target CurrentUserHomeDirectory
+          test -f "$HOME/Library/Application Support/obs-studio/plugins/obs-auto-crop.plugin/Contents/MacOS/obs-auto-crop"
+          test -f "$HOME/Library/Application Support/obs-studio/plugins/obs-auto-crop.plugin/Contents/Resources/locale/ko-KR.ini"
 
-      - name: Package Linux
+      - name: Build Ubuntu installer
         if: matrix.platform == 'linux'
         shell: bash
         run: |
           mkdir -p release
-          tar -C stage -czf "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-x86_64.tar.gz" lib share
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            version="$(sed -n 's/^project(obs-auto-crop VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)"
+          fi
+          mkdir -p build/deb-root/usr build/deb-root/DEBIAN
+          cp -a stage/lib stage/share build/deb-root/usr/
+          printf '%s\n' \
+            'Package: obs-auto-crop' \
+            "Version: $version" \
+            'Architecture: amd64' \
+            'Maintainer: KimChungHo <KimChungHo@users.noreply.github.com>' \
+            'Depends: obs-studio' \
+            'Description: Automatic crop plugin for OBS Studio' \
+            ' Adds an automatic crop command to the OBS transform menu.' \
+            > build/deb-root/DEBIAN/control
+          dpkg-deb --build --root-owner-group build/deb-root "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-amd64.deb"
+          dpkg-deb --extract "release/obs-auto-crop-${GITHUB_REF_NAME}-ubuntu-26.04-amd64.deb" build/deb-verify
+          test -f build/deb-verify/usr/lib/x86_64-linux-gnu/obs-plugins/obs-auto-crop.so
+          test -f build/deb-verify/usr/share/obs/obs-plugins/obs-auto-crop/locale/ko-KR.ini
 
       - uses: actions/upload-artifact@v4
         with:
