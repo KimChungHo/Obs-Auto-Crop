@@ -2,6 +2,16 @@
 
 English | [한국어](README.ko.md)
 
+## License
+
+Original code in this repository is available under the [MIT License](LICENSE). You may use, modify, and redistribute it, including commercially, provided you retain the copyright notice (including the original repository URL) and license notice in all copies or substantial portions of the software.
+
+Original project: [KimChungHo/Obs-Auto-Crop](https://github.com/KimChungHo/Obs-Auto-Crop).
+
+This plugin links to OBS Studio. Distribution of the linked plugin must also comply with OBS Studio's GPL-2.0-or-later requirements, including providing corresponding source code; see the [OBS plugin licensing policy](https://obsproject.com/forum/threads/forum-resource-and-ip-policy.178569/). The MIT license for this repository's original code does not replace dependency license obligations.
+
+## Overview
+
 Choose **Transform → Auto Crop** for an OBS source to detect black borders in its current frame and apply the crop to that scene item. This is a one-time command, and you can undo it with OBS's Undo command.
 
 The plugin provides localized menu and Undo labels for the 77 language codes supported by OBS 32.2.2. Error and guidance messages are available in Korean and English; other languages fall back to English.
